@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Belajar JS</title>
+  <title> Layanan Kunjungan Puskesmas</title>
+  <link rel="icon" href="puskemas.png">
   <link rel="stylesheet" href="styles.css">
   <style>
+
+
     .dashboard-container {
       max-width: 800px;
       margin: 50px auto;
@@ -80,9 +84,10 @@
     }
   </style>
 </head>
+
 <body>
   <div class="dashboard-container">
-    <h1 class="welcome-message">Selamat Datang!</h1>
+    <h1 class="welcome-message">Selamat Datang di Layanan Kunjungan Puskesmas</h1>
     <div class="user-info">
       <p>Halo, <strong id="userName">User</strong>!</p>
       <p>Anda berhasil login ke dashboard.</p>
@@ -96,9 +101,12 @@
 
     <div class="info-card">
       <h3>📋 Menu</h3>
-      <p>Akses fitur-fitur yang tersedia:</p>
-      <div style="margin-top: 15px;">
-        <a href="/user-management" class="btn btn-primary">👥 User Management</a>
+      <p>Akses menu-menu yang tersedia:</p>
+      <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <a href="/user-management" class="btn btn-primary">👥 User</a>
+        <a href="/pengunjung" class="btn btn-primary" style="background-color: #28a745;">📝 Input Data Pengunjung</a>
+        <a href="/kunjungan" class="btn btn-primary" style="background-color: #ffc107; color: black;">🏥 Input
+          Kunjungan</a>
       </div>
     </div>
 
@@ -116,7 +124,13 @@
         const data = await response.json();
 
         if (data.loggedIn) {
-          document.getElementById('userName').textContent = data.user.username;
+          // Tampilkan Nama Lengkap jika ada, jika tidak tampilkan Username
+          const displayName = data.user.fullName || data.user.username;
+          document.getElementById('userName').textContent = displayName;
+
+          if (data.sessionId) {
+            document.getElementById('sessionInfo').textContent = data.sessionId;
+          }
         } else {
           // Jika tidak login, redirect ke halaman login
           window.location.href = '/';
@@ -162,4 +176,5 @@
     checkSession();
   </script>
 </body>
+
 </html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layanan Kunjungan Puskesmas</title>
+    <link rel="icon" href="puskemas.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(180deg, #f0fdf4, #16a34a);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        /* Form Styles */
+        .form-card {
+            background: #f8f9fa;
+            padding: 30px;
+            padding-right: 50px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f1f3f5;
+            color: #333;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h2>🏥 Input Kunjungan</h2>
+            <a href="/dashboard" class="btn btn-secondary">Kembali ke Dashboard</a>
+        </div>
+
+        <!-- Form Tambah Kunjungan -->
+        <div class="form-card">
+            <h3 style="margin-top:0;">Catat Kunjungan Baru</h3>
+            <form id="addVisitForm">
+                <div class="form-group">
+                    <label for="pengunjung_id">Pilih Nama Pengunjung</label>
+                    <select id="pengunjung_id" name="pengunjung_id" required>
+                        <option value="">-- Loading data pengunjung... --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="keperluan">Keperluan / Poli Tujuan</label>
+                    <textarea id="keperluan" name="keperluan" placeholder="Contoh: Periksa Gigi / Poli Umum"
+                        required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Simpan Kunjungan</button>
+            </form>
+        </div>
+
+        <!-- Tabel Riwayat Kunjungan -->
+        <h3>Riwayat Kunjungan Hari Ini</h3>
+        <div class="table-responsive">
+            <table id="visitsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Waktu Datang</th>
+                        <th>Nama Pengunjung</th>
+                        <th>Keperluan</th>
+                        <th>Petugas</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data akan dimuat disini -->
+                </tbody>
+            </table>
+            <div id="loading" style="text-align:center; padding:20px;">Memuat data...</div>
+            <div id="emptyState" class="empty-state" style="display:none;">Belum ada riwayat kunjungan.</div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVisitorsDropdown();
+            loadVisits();
+        });
+
+        // 1. Load Dropdown Pengunjung
+        async function loadVisitorsDropdown() {
+            const select = document.getElementById('pengunjung_id');
+            try {
+                const response = await fetch('/api/pengunjung');
+                const result = await response.json();
+
+                select.innerHTML = '<option value="">-- Pilih Pengunjung --</option>';
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(p => {
+                        const option = document.createElement('option');
+                        option.value = p.id;
+                        option.textContent = `${p.nama} (${p.alamat || 'No Address'})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.textContent = 'Belum ada data pengunjung (Input di menu Pengunjung)';
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Error loading dropdown:', error);
+                select.innerHTML = '<option value="">Gagal memuat data</option>';
+            }
+        }
+
+        // 2. Load Riwayat Kunjungan
+        async function loadVisits() {
+            const tbody = document.querySelector('#visitsTable tbody');
+            const loading = document.getElementById('loading');
+            const emptyState = document.getElementById('emptyState');
+
+            tbody.innerHTML = '';
+            loading.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/kunjungan');
+                const result = await response.json();
+
+                loading.style.display = 'none';
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(item => {
+                        const date = new Date(item.waktu_datang).toLocaleString('id-ID', {
+                            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${item.id}</td>
+                            <td>${date}</td>
+                            <td><strong>${item.nama_pengunjung}</strong></td>
+                            <td>${item.keperluan}</td>
+                            <td>${item.nama_petugas}</td>
+                             <td>
+                                <button class="btn btn-danger btn-sm" onclick="deleteVisit(${item.id})" style="background-color: #dc3545; padding: 5px 10px; font-size: 12px;">Hapus</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading visits:', error);
+                loading.textContent = 'Gagal memuat data.';
+            }
+        }
+
+        // 3. Handle Form Submit
+        document.getElementById('addVisitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                pengunjung_id: document.getElementById('pengunjung_id').value,
+                keperluan: document.getElementById('keperluan').value
+            };
+
+            try {
+                const response = await fetch('/api/kunjungan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Berhasil: ' + result.message);
+                    document.getElementById('keperluan').value = ''; // Reset text area only
+                    loadVisits(); // Reload table
+                } else {
+                    alert('Gagal: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menyimpan data.');
+            }
+        });
+
+        // Hapus Kunjungan
+        async function deleteVisit(id) {
+            if (confirm('Yakin ingin menghapus riwayat kunjungan ini?')) {
+                try {
+                    const response = await fetch(`/api/kunjungan/${id}`, { method: 'DELETE' });
+                    const result = await response.json();
+                    alert(result.message);
+                    if (result.success) loadVisits();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Gagal menghapus data.');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

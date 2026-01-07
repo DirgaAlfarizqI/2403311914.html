@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Management - Belajar JS</title>
+  <title> Layanan Kunjungan Puskesmas</title>
+  <link rel="icon" href="puskemas.png">
   <link rel="stylesheet" href="styles.css">
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(180deg, #f0fdf4, #16a34a);
       min-height: 100vh;
       padding: 20px;
     }
@@ -109,7 +111,8 @@
       margin-top: 20px;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px;
       text-align: left;
       border-bottom: 1px solid #ddd;
@@ -216,10 +219,11 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
-      <h1>👥 User Management</h1>
+      <h1>👥 Data User</h1>
       <div class="header-actions">
         <button class="btn btn-success" onclick="openAddModal()">+ Tambah User</button>
         <a href="/dashboard" class="btn btn-secondary">← Kembali ke Dashboard</a>
@@ -254,7 +258,7 @@
       <h2 id="modalTitle">Tambah User Baru</h2>
       <form id="userForm">
         <input type="hidden" id="userId">
-        
+
         <div class="form-group">
           <label for="username">Username *</label>
           <input type="text" id="username" name="username" required>
@@ -308,7 +312,7 @@
 
       users.forEach(user => {
         const row = document.createElement('tr');
-        
+
         row.innerHTML = `
           <td>${user.id}</td>
           <td>${user.username}</td>
@@ -342,14 +346,14 @@
         if (result.success) {
           isEditMode = true;
           const user = result.data;
-          
+
           document.getElementById('modalTitle').textContent = 'Edit User';
           document.getElementById('userId').value = user.id;
           document.getElementById('username').value = user.username;
           document.getElementById('password').value = '';
           document.getElementById('password').required = false;
           document.getElementById('passwordNote').textContent = '(Kosongkan jika tidak ingin mengubah)';
-          
+
           document.getElementById('userModal').style.display = 'block';
         }
       } catch (error) {
@@ -433,7 +437,7 @@
     }
 
     // Tutup modal jika klik di luar modal
-    window.onclick = function(event) {
+    window.onclick = function (event) {
       const modal = document.getElementById('userModal');
       if (event.target === modal) {
         closeModal();
@@ -444,4 +448,5 @@
     loadUsers();
   </script>
 </body>
+
 </html>
